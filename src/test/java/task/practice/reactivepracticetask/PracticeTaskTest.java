@@ -139,13 +139,14 @@ public class PracticeTaskTest {
 
         Flux<String> flux = Flux.just("google", "abc", "fb", "stackoverflow")
             .filter(s -> s.length() >= 5) // 문자열 중 5자 이상 되는 문자열만 추출
-            .flatMap(s -> Mono.just(s.toUpperCase())) // 비동기로 대문자 치환
+            .publishOn(Schedulers.boundedElastic()) // Reactor는 비동기를 강제하지 않기 때문에 Schedulers를 사용하여 비동기 처리
+            .flatMap(s -> Mono.just(s.toUpperCase())) // 대문자 치환
             .repeat(1) // 1번 더 반복
             .log();
 
         StepVerifier.create(flux)
             .expectNext("GOOGLE", "STACKOVERFLOW", "GOOGLE", "STACKOVERFLOW")
-            .as("대문자로 치환되고 한 번 더 반복 했는지 검증")
+            .as("5자 이상 되는 문자열만 비동기로 대문자로 치환되고 한 번 더 반복 했는지 검증")
             .verifyComplete();
     }
 }
